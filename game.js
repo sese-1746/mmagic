@@ -1,12 +1,13 @@
 "use strict";
 
 const saveKey = "aether-fragment-v1";
-const tabs = [["research","研究台","⬡"], ["analysis","解析台","◈"], ["atlas","要素图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
+const tabs = [["research","研究台","⬡"], ["market","行旅驿站","◇"], ["arena","回响擂台","✧"], ["analysis","解析台","◈"], ["atlas","要素图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
 const fresh = () => ({
   chapter: 0, open: 0, view: "research", inventory: {wind: 4, earth: 4, fire: 4, water: 4, order: 4, chaos: 4},
   known: [...primal], notes: {}, ink: 8, corruption: 0, residue: 0, region: 0,
   nodes: regions.map(region => region[2].map(() => ({life: 100, pure: false}))),
-  relicUses: {}, failures: 0, lock: null, surge: 0, eventAt: 35
+  relicUses: {}, failures: 0, lock: null, surge: 0, eventAt: 35,
+  coins: 3, wins: [], battle: null
 });
 
 let state = fresh();
@@ -14,7 +15,7 @@ let saveAvailable = true;
 try {
   const saved = JSON.parse(localStorage.getItem(saveKey));
   if (saved && Number.isInteger(saved.open) && saved.open >= 0 && saved.open <= chapters.length) {
-    state = {...state, ...saved};
+    state = {...state, coins: state.coins + saved.open * 2, ...saved};
   }
 } catch {}
 let selected = null;
@@ -53,12 +54,12 @@ function render() {
   const inventory = get("inventory");
   const tileScroll = inventory.querySelector(".tiles")?.scrollLeft || 0;
   document.documentElement.style.setProperty("--corruption", state.corruption / 100);
-  get("meters").innerHTML = '<span>墨水 <b>' + state.ink + '</b></span><span>残渣 <b>' + state.residue + '</b></span><span class="corruption">腐化 <b>' + state.corruption + '%</b><meter min="0" max="100" value="' + state.corruption + '" aria-label="腐化"></meter></span>';
+  get("meters").innerHTML = '<span>潮印 <b>' + state.coins + '</b></span><span>墨水 <b>' + state.ink + '</b></span><span>残渣 <b>' + state.residue + '</b></span><span class="corruption">腐化 <b>' + state.corruption + '%</b><meter min="0" max="100" value="' + state.corruption + '" aria-label="腐化"></meter></span>';
   get("nav").innerHTML = tabs.map(([id, label, symbol]) => btn('<span aria-hidden="true">' + symbol + '</span>' + label + (id === "event" && eventReady() ? '<i class="signal"></i>' : ''), "view", id, state.view === id ? 'aria-current="page"' : '')).join("");
   const available = Object.keys(aspects).filter(id => state.known.includes(id) || amount(id));
   inventory.innerHTML = '<div class="eyebrow">工作台储备</div><h2>要素库存</h2><div class="tiles">' + available.map(id => btn(icon(id) + '<span>' + name(id) + '</span><b>' + amount(id) + '</b>', "select", id,
     'class="tile' + (state.corruption >= 50 && id === "chaos" ? ' distorted' : '') + '" draggable="' + (amount(id) > 0) + '" aria-pressed="' + (id === selected) + '" ' + (amount(id) ? '' : 'disabled'))).join("") + '</div><p class="muted">' + (selected ? '已选中 ' + name(selected) : '点击选取或拖到工作槽') + '</p>';
-  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, event: eventScreen}[state.view] || research)();
+  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, market, arena, event: eventScreen}[state.view] || research)();
   get("notice").textContent = notice;
   get("save").textContent = saveAvailable ? "本地自动存档" : "浏览器当前无法写入存档";
   get("nav").scrollLeft = navScroll;
@@ -233,9 +234,10 @@ function submit() {
   }
   state.open++;
   state.ink += 5;
+  state.coins += 2;
   state.failures = 0;
   state.lock = null;
-  update("研究已归档，获得 5 墨水" + (reward ? "和 2 " + name(reward) : "") + "。");
+  update("研究已归档，获得 5 墨水、2 潮印" + (reward ? "和 2 " + name(reward) : "") + "。");
 }
 
 function rest() {
@@ -356,6 +358,7 @@ function act(action, value, aspect = selected) {
       add("chaos", 1);
       corrupt(-5);
       return update("残渣已沉降，回收了 1 混沌。");
+    default: return actEncounter(action, value);
   }
 }
 
