@@ -4,25 +4,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="《以太残响》是一款关于遗物、六边形研究阵与灵气衰竭的炼金解谜游戏。">
-  <meta name="theme-color" content="#191822">
+  <meta name="theme-color" content="#181420">
   <title>以太残响 · Aether Fragment</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="world.js" defer></script>
-  <script src="combat-skills.js" defer></script>
-  <script src="encounters.js" defer></script>
-  <script src="travel.js" defer></script>
-  <script src="game.js" defer></script>
+  <link rel="icon" href="./assets/weapons/copper.webp">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="/src/main.ts"></script>
 </head>
-<body>
-  <header class="top">
-    <div class="brand"><span class="sigil" aria-hidden="true">✧</span><div><strong>以太残响</strong><small>AETHER FRAGMENT</small></div></div>
-    <div id="meters" class="meters"></div>
-  </header>
-  <div class="shell">
-    <nav id="nav" aria-label="工作间"></nav>
-    <main id="screen"></main>
-    <aside id="inventory" class="inventory" aria-label="要素库存"></aside>
+<body data-game-mode="boot">
+  <div id="game-stage" aria-hidden="true"></div>
+  <section id="boot" class="boot-view" aria-labelledby="boot-title">
+    <div class="boot-card">
+      <p class="brand-en">AETHER FRAGMENT</p>
+      <h1 id="boot-title">以太残响</h1>
+      <p id="boot-status" role="status">正在点亮工作台…</p>
+      <progress id="boot-progress" max="7" value="0" aria-label="加载进度"></progress>
+    </div>
+  </section>
+  <main id="menu" class="menu-view" aria-labelledby="menu-title" hidden>
+    <div class="menu-inner">
+      <div class="menu-sigil" aria-hidden="true">✧</div>
+      <p class="brand-en">AETHER FRAGMENT</p>
+      <h1 id="menu-title">以太残响</h1>
+      <p class="menu-summary">在灵气枯竭前，读懂遗物留下的最后一道刻痕。</p>
+      <div class="menu-actions">
+        <button type="button" class="primary start-button" data-shell="play">开始旅程</button>
+        <button type="button" data-shell="settings">设置</button>
+        <button type="button" data-shell="about">关于</button>
+        <button type="button" data-shell="reset" id="new-journey" hidden>开始新存档</button>
+      </div>
+      <p id="menu-progress"></p>
+    </div>
+  </main>
+  <div id="workspace" hidden>
+    <header class="top">
+      <div class="brand"><span class="sigil" aria-hidden="true">✧</span><div><strong>以太残响</strong><small>AETHER FRAGMENT</small></div></div>
+      <div class="workspace-tools"><div id="meters" class="meters"></div>
+        <button type="button" class="pause-button" data-shell="pause" aria-keyshortcuts="Escape">暂停</button>
+      </div>
+    </header>
+    <div class="shell">
+      <nav id="nav" aria-label="工作间"></nav>
+      <main id="screen" tabindex="-1"></main>
+      <aside id="inventory" class="inventory" aria-label="要素库存"></aside>
+    </div>
+    <footer><span id="notice" role="status" aria-live="polite"></span><span id="save"></span></footer>
   </div>
-  <footer><span id="notice" role="status" aria-live="polite"></span><span id="save"></span></footer>
+  <dialog id="game-dialog" aria-labelledby="dialog-title"><div id="dialog-body"></div></dialog>
+  <p id="asset-warning" class="asset-warning" role="status" hidden>部分美术资源未能加载。可继续游玩。</p>
+  <noscript><p>请启用 JavaScript 以开始游戏。</p></noscript>
 </body>
 </html>

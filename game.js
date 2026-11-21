@@ -1,14 +1,14 @@
 "use strict";
 
 const saveKey = "aether-fragment-v1";
-const tabs = [["research","研究台","⬡"], ["roster","角色选择","♙"], ["market","行旅驿站","◇"], ["arena","回响擂台","✧"], ["travel","旅行","△"], ["analysis","解析台","◈"], ["atlas","合成与图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
+const tabs = [["research","研究台","⬡"], ["roster","角色选择","♙"], ["armory","武器库","⌑"], ["market","行旅驿站","◇"], ["arena","回响擂台","✧"], ["travel","旅行","△"], ["analysis","解析台","◈"], ["atlas","合成与图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
 const fresh = () => ({
   chapter: 0, open: 0, view: "research", inventory: {wind: 4, earth: 4, fire: 4, water: 4, order: 4, chaos: 4},
   known: [...primal], notes: {}, ink: 8, corruption: 0, residue: 0, region: 0,
   nodes: regions.map(region => region[2].map(() => ({life: 100, pure: false}))),
   relicUses: {}, failures: 0, lock: null, surge: 0, eventAt: 35,
   coins: 3, wins: [], battle: null, preparation: null, character: "scholar", researchClues: {},
-  travelHistory: {}, expedition: null, tripReport: null, thefts: {}
+  travelHistory: {}, expedition: null, tripReport: null, thefts: {}, gear: {}
 });
 
 let state = fresh();
@@ -65,7 +65,7 @@ function render() {
   const available = Object.keys(aspects).filter(id => state.known.includes(id) || amount(id));
   inventory.innerHTML = '<div class="eyebrow">工作台储备</div><h2>要素库存</h2><div class="tiles">' + available.map(id => btn(icon(id) + '<span>' + name(id) + '</span><b>' + amount(id) + '</b>', "select", id,
     'class="tile' + (state.corruption >= 50 && id === "chaos" ? ' distorted' : '') + '" draggable="' + (amount(id) > 0) + '" aria-pressed="' + (id === selected) + '" ' + (amount(id) ? '' : 'disabled'))).join("") + '</div><p class="muted">' + (selected ? '已选中 ' + name(selected) : '点击选取或拖到工作槽') + '</p>';
-  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, market, arena, roster, travel: travelScreen, event: eventScreen}[state.view] || research)();
+  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, market, arena, roster, armory, travel: travelScreen, event: eventScreen}[state.view] || research)();
   get("notice").textContent = notice;
   get("save").textContent = saveAvailable ? "本地自动存档" : "浏览器当前无法写入存档";
   get("nav").scrollLeft = navScroll;
@@ -361,6 +361,7 @@ function act(action, value, aspect = selected) {
       conversation.receipt = null;
       return update("现在由" + activeCharacter().name + "出场。");
     case "read-board": return readBoard();
+    case "equip-weapon": return equipWeapon(value);
     case "travel-start": return startTravel(value);
     case "travel-choose": return finishTravel(value);
     case "travel-cancel": state.expedition = null; return update("已折返驿站。");
@@ -458,4 +459,27 @@ document.addEventListener("drop", event => {
     if (value && relics[value] && state.open >= relics[value][2]) act("relic", value);
   }
 });
+if (typeof window !== "undefined") {
+  window.aetherRuntime = {
+    snapshot: () => ({open:state.open, total:chapters.length, duel:Boolean(state.battle)}),
+    reset() {
+      state = fresh();
+      selected = null;
+      relic = null;
+      mix = [];
+      altar = [null,null,null,null];
+      conversation = {person:"vendor",topic:null};
+      duelCue = null;
+      update("新的旅程从雾港铜哨开始。");
+    },
+    retryDuel() {
+      if (!state.battle) return;
+      const rival = state.battle.rival;
+      releaseElements(state.battle);
+      state.battle = null;
+      state.view = "arena";
+      challenge(rival);
+    }
+  };
+}
 render();

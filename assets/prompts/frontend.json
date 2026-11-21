@@ -1,0 +1,24 @@
+{
+  "generator": "ImageGen",
+  "assets": [
+    {
+      "paths": [
+        "assets/menu.webp"
+      ],
+      "prompt": "Panoramic original main menu backdrop for Aether Fragment, an East Asian alchemy narrative puzzle browser game. A lonely early-night scholarly workshop suspended above a drowned port, composition strongly weighted to the RIGHT: right half shows a large brass armillary against a tall round window opening onto violet coastal mountains and lanterns, stacked worn manuscripts, wax candles, and faint teal runes reflected in rain. Left third deliberately shadowed and uncluttered, with smoothly receding dark shelves and faded dark mauve tones so white title and buttons over it are legible. Moody painterly graphic novel realism, restrained copper and ink-purple palette, precise weathered materials, cream highlights, muted turquoise spark points. No people, no words, letters, borders or interfaces. Wide 16:9 screen art, keep central/right motif visible when narrow cropped."
+    },
+    {
+      "paths": [
+        "assets/weapons/copper.webp",
+        "assets/weapons/reed.webp",
+        "assets/weapons/prism.webp",
+        "assets/weapons/watch.webp",
+        "assets/weapons/margin.webp",
+        "assets/weapons/brand.webp",
+        "assets/weapons/scale.webp",
+        "assets/weapons/compass.webp"
+      ],
+      "prompt": "Use case stylized-concept. Create one original transparent game icon atlas, four equal columns and two equal rows on a landscape canvas, 1536x1024 or wider. Eight separate alchemical implements, one centered per equal invisible cell, compact readable shape, ample transparent gutter around each object, no cell overlaps. Painterly realistic graphic novel item illustration for an East Asian dark fantasy alchemy game, bronze, aged parchment, muted violet, teal gems, warm rim light. No people, text, numbers, labels, frames, scenic backgrounds or shadows beyond each silhouette. Position exactly in this row-major order. Top-left: short copper wand with a blue bead. Top-second: a braided bamboo protective wand with jade ring. Top-third: hexagonal brass prism on a compact scepter. Top-fourth: slate blue ward staff with an oval silver ring. Bottom-left: a slim scholar's brush with ink-dark handle and a small silver gridded disc. Bottom-second: refined short burgundy and gold ritual rod with ruby seal. Bottom-third: elegant brass merchant scales with jade and chain, handheld compact. Bottom-fourth: a jade and copper travel compass with a leather loop and glowing cyan dial. Every object fully visible in its own cell, three-quarter view laid on a diagonal when appropriate. Each cutout against true transparency."
+    }
+  ]
+}

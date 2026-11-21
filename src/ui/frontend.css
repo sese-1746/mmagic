@@ -1,0 +1,68 @@
+:root {
+  --shell-gold:#e8c587;
+  --shell-paper:#f4e7d4;
+  --shell-ink:#181420;
+  --shell-border:#775f56;
+  --shell-radius:12px;
+  --touch-target:44px;
+  --ui-duration:180ms;
+}
+[hidden] { display:none !important }
+#game-stage { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:-1 }
+#game-stage canvas { pointer-events:none; display:block }
+body { min-height:100svh; isolation:isolate; background:#201824 }
+body::before { z-index:2 }
+body[data-game-mode="menu"]::before,body[data-game-mode="boot"]::before { opacity:0 }
+#workspace .top { background:#1b1723ee; border-bottom:1px solid #594653 }
+#workspace main,#workspace nav,#workspace aside { background:#211b2aef }
+.workspace-tools { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px }
+.pause-button { border-color:#916d57; min-height:var(--touch-target) }
+.boot-view,.menu-view { min-height:100svh; display:grid; align-items:center }
+.boot-view { justify-items:center; padding:24px; background:radial-gradient(ellipse,#392c3b,#181420) }
+.boot-card { width:min(100%,420px); text-align:center; padding:24px }
+.boot-card h1,.menu-view h1 { font-family:"Songti SC",SimSun,serif; font-weight:650; color:var(--shell-paper); letter-spacing:.11em }
+.boot-card progress { display:block; width:100%; height:12px; accent-color:var(--shell-gold); margin-top:18px }
+.boot-card button { margin:10px }
+.menu-view {
+  padding:clamp(24px,8vw,125px); margin:0; width:100%; border:0; border-radius:0; box-shadow:none;
+  background:linear-gradient(90deg,#191521f5,#1f1925b8 38%,#20182718 83%);
+}
+.menu-inner { width:min(100%,410px) }
+.menu-sigil { display:grid; place-items:center; width:54px; height:54px; border:1px solid #a68862; color:var(--shell-gold); border-radius:9px; transform:rotate(45deg); font-size:29px; margin:0 0 27px 11px }
+.brand-en { color:var(--shell-gold); font-size:12px; letter-spacing:.22em; margin:0 0 10px }
+.menu-view h1 { font-size:clamp(49px,8vw,106px); margin:0 -.11em .12em 0; line-height:1.08 }
+.menu-summary { color:#d9c9bd; margin:15px 0 26px; font-size:clamp(14px,2vw,17px); line-height:1.65 }
+.menu-actions { display:flex; flex-wrap:wrap; gap:9px }
+.menu-actions button { min-height:var(--touch-target); padding-inline:16px }
+.menu-actions .start-button { flex:1 0 100%; text-align:left; padding-left:17px; min-height:52px; font-size:17px }
+#menu-progress { margin:18px 0 0; color:var(--shell-gold); font-size:13px }
+#game-dialog {
+  width:min(480px,calc(100% - 30px)); max-height:calc(100svh - 28px); color:var(--shell-paper);
+  background:#282131; border:1px solid var(--shell-border); border-radius:var(--shell-radius);
+  padding:clamp(17px,4vw,27px); box-shadow:0 20px 70px #100b17b0;
+}
+#game-dialog[open] { animation:panel-in var(--ui-duration) ease-out }
+#game-dialog::backdrop { background:#110e18b8; backdrop-filter:blur(3px) }
+#dialog-title { font:600 clamp(25px,5vw,34px) "Songti SC",SimSun,serif; margin:5px 0 10px }
+#game-dialog p:not(.brand-en) { line-height:1.65; color:#d5c8d3 }
+.dialog-actions { display:flex; justify-content:flex-start; flex-wrap:wrap; gap:8px; margin-top:15px }
+.dialog-actions button,.setting-list input,.setting-list select { min-height:var(--touch-target) }
+.setting-list { display:grid; gap:8px }
+.setting-list label { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #55475d }
+.setting-list input { width:23px; accent-color:var(--shell-gold) }
+.setting-list select { max-width:170px; border:1px solid #66546b; background:#34293b; color:var(--shell-paper); padding:4px 8px; border-radius:5px }
+.asset-warning { position:fixed; z-index:4; bottom:8px; right:8px; margin:0; background:#281f32; color:var(--shell-gold); border:1px solid #886a55; border-radius:6px; padding:7px 10px; font-size:12px }
+.missing-art { visibility:hidden }
+@keyframes panel-in { from { opacity:0; transform:translateY(7px) } }
+@media(max-width:760px) {
+  .menu-view { align-items:end; padding:25px 18px max(30px,env(safe-area-inset-bottom)); background:linear-gradient(0deg,#181420 7%,#1a1426de 45%,#241c2b20 92%) }
+  .menu-inner { margin:auto auto 2vh 0 }
+  .workspace-tools { gap:5px }
+  .pause-button { font-size:12px; padding:3px 8px }
+  #workspace .shell { gap:8px }
+}
+@media(pointer:coarse) {
+  #workspace button { min-height:var(--touch-target) }
+  #workspace .chapterbar button { min-width:var(--touch-target) }
+}
+html[data-motion="reduced"] *,html[data-motion="reduced"] *::before { animation-duration:0s !important; transition-duration:0s !important }

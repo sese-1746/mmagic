@@ -38,14 +38,17 @@ function skillDescription(skill) {
   return effect + " · " + cost;
 }
 
-function attackPreview(skill, battle) {
+function attackPreview(skill, battle, effects) {
   const trained = Boolean(skill.accuracy && roleOf(battle.character).kind === "combat");
   const overcast = trained && skillChoice.overcast;
+  const bloodCost = 4 - effects.bloodDiscount;
   return {
     trained, overcast,
-    accuracy:Math.min(100, (skill.accuracy || 100) + (trained ? 12 : 0)),
-    healthCost:overcast ? 4 : 0,
-    power:skill.power ? skill.power + (skill.scaling || 0) * skillChoice.units + (trained ? 2 : 0) + (overcast ? 6 : 0) : 0
+    bloodCost,
+    accuracy:Math.min(100, (skill.accuracy || 100) + (trained ? 12 : 0) + (skill.accuracy ? effects.accuracy : 0)),
+    healthCost:overcast ? bloodCost : 0,
+    power:skill.power ? skill.power + (skill.scaling || 0) * skillChoice.units + (trained ? 2 : 0) +
+      (overcast ? 6 : 0) + (skill.accuracy ? effects.power : 0) : 0
   };
 }
 
@@ -61,7 +64,8 @@ function skillPlan(battle) {
   const {id, primary, secondary, units} = skillChoice;
   const skill = combatSkills[id];
   const role = roleOf(battle.character);
-  const attack = attackPreview(skill,battle);
+  const effects = weaponEffects(battle.weapon,battle.character);
+  const attack = attackPreview(skill,battle,effects);
   if (attack.healthCost >= battle.player) return null;
   if (skill.steal && (role.kind !== "exploration" || stoleFrom(battle) || !enemyElement(battle))) return null;
   const {pool,reserve,quota} = battleSupply(battle);
@@ -80,8 +84,9 @@ function skillPlan(battle) {
     costs, reserve, ...attack,
     steal:skill.steal ? enemyElement(battle) : null,
     refund:skill.min && role.kind === "research" && !battle.recovered ? primary : null,
-    heal:(skill.healing || 0) * units,
-    shield:skill.shield || 0
+    refundUnits:Math.min(units,1 + effects.recovery),
+    heal:skill.healing ? skill.healing * units + effects.healing : 0,
+    shield:skill.shield ? skill.shield + effects.guard : skill.steal ? effects.stealGuard : 0
   };
 }
 
@@ -89,7 +94,7 @@ function skillPanel(battle) {
   const {pool,reserve,quota} = battleSupply(battle);
   const chosen = combatSkills[skillChoice.id];
   const plan = skillPlan(battle);
-  const attack = attackPreview(chosen,battle);
+  const attack = attackPreview(chosen,battle,weaponEffects(battle.weapon,battle.character));
   const eligible = Object.entries(combatSkills).filter(([, skill]) => !skill.steal || roleOf(battle.character).kind === "exploration");
   const supplies = Object.entries(pool).filter(([, n]) => n > 0);
   const tokens = !reserve ? supplies.map(([id, n]) => '<span>' + icon(id) + name(id) + ' ×' + n + '</span>').join("") : "";
@@ -107,7 +112,11 @@ function skillPanel(battle) {
       '</strong><small>' + skillDescription(skill) + '</small>', "skill-pick", id, 'class="move" aria-pressed="' + (id === skillChoice.id) + '"')).join("") +
     '</div><div class="skill-config">' + choices +
     (chosen.accuracy ? '<p class="muted">本次威力 ' + attack.power + ' · 命中率 ' + attack.accuracy + '%</p>' : "") +
-    (attack.trained ? btn("血刻 · 失去 4 护盾，威力再 +6", "skill-overcast", "", 'aria-pressed="' + Boolean(skillChoice.overcast) + '" ' + (battle.player <= 4 && !skillChoice.overcast ? "disabled" : "")) : "") +
+    (plan?.heal ? '<p class="muted">本次回护恢复 ' + plan.heal + ' 护盾</p>' : "") +
+    (plan?.shield ? '<p class="muted">本回合可抵消 ' + plan.shield + ' 点伤害</p>' : "") +
+    (plan?.refund && plan.refundUnits > 1 ? '<p class="muted">摹痕 · 成功时可返还 ' + plan.refundUnits + ' 份' + name(plan.refund) + '</p>' : "") +
+    (attack.trained ? btn("血刻 · 失去 " + attack.bloodCost + " 护盾，威力再 +6", "skill-overcast", "", 'aria-pressed="' + Boolean(skillChoice.overcast) + '" ' +
+      (battle.player <= attack.bloodCost && !skillChoice.overcast ? "disabled" : "")) : "") +
     (!plan ? '<p class="muted">' + (chosen.steal ? "对手没有剩余要素，或本研究进度已从该对手夺取过。" :
       attack.healthCost >= battle.player ? "护盾不足以支付血刻。" : chosen.healing && battle.player >= duelHealth ? "护盾已满。" :
       "所选要素或调用额度不足。交织需要两种不同的要素。") + '</p>' : "") +

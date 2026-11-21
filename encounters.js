@@ -51,6 +51,7 @@ function roster() {
         '<span class="role-category">' + classLabels[character.kind] + '</span>' + portrait(character.art) +
         '</div><div class="role-copy"><h2>' + character.name + '</h2><p>' + character.bio +
         '</p><div class="role-skill">' + character.skills.map(([title,detail]) => '<strong>' + title + '</strong><p>' + detail + '</p>').join("") + '</div>' +
+        '<p class="role-equipped">' + weaponLabel(equippedWeapon(id),id) + '</p>' +
         btn(equipped ? "当前出场" : "选择" + character.name, "choose-role", id, equipped || fighting ? "disabled" : 'class="primary"') +
         '</div></article>';
     }).join("") + '</div>';
@@ -135,7 +136,9 @@ function preparationScreen() {
   const total = countsTotal(elements);
   const valid = total === carryLimit && Object.entries(elements).every(([aspect, n]) => n <= amount(aspect));
   const inventory = Object.keys(aspects).filter(aspect => amount(aspect) || elements[aspect]);
-  return '<section class="card loadout"><h2>对阵' + rival.name + '</h2><p>从库存挑选恰好 ' + carryLimit +
+  return '<section class="card loadout"><h2>对阵' + rival.name + '</h2><div class="loadout-weapon"><strong>武器 · ' +
+    (state.battle ? weaponLabel(state.battle.weapon,state.battle.character) : weaponLabel(equippedWeapon(state.character),state.character)) + '</strong>' +
+    (state.battle ? "" : btn("更换武器", "view", "armory")) + '</div><p>从库存挑选恰好 ' + carryLimit +
     ' 份要素，种类不限。耗尽后可再从研究库存调用至多 ' + reserveLimit + ' 份。未用携带要素在结束或退出时退回。</p>' +
     '<div class="loadout-total"><strong>已选 ' + total + ' / ' + carryLimit + '</strong><progress max="' + carryLimit + '" value="' + total + '" aria-label="已选携带要素"></progress></div>' +
     '<div class="loadout-grid">' + inventory.map(aspect => {
@@ -184,7 +187,7 @@ function arena() {
     portrait(rival.id, (cue?.damage ? "recoil" : "") + (battle.enemy ? "" : " fallen")) + '</div>' +
     (cue?.damage ? '<span class="impact foe-impact" aria-hidden="true">−' + cue.damage + '</span>' : "") +
     (cue?.received ? '<span class="impact player-impact" aria-hidden="true">−' + cue.received + '</span>' : "") + '</div>' +
-    '<div class="duel-meta"><span>第 ' + (battle.round + 1) + ' 回合</span></div>' +
+    '<div class="duel-meta"><span>第 ' + (battle.round + 1) + ' 回合</span><span>' + weaponLabel(battle.weapon,battle.character) + '</span></div>' +
     speech(narration, "", line, detail) +
     opponentSupplies(battle,character) +
     (battle.result ? '<div class="scene-actions">' + btn("返回擂台", "leave-duel", "", 'class="primary"') + '</div>' : skillPanel(battle)) + (battle.log.length ?
@@ -231,7 +234,7 @@ function startDuel() {
   if (!draft || countsTotal(draft.elements) !== carryLimit) return;
   const rival = rivals.find(candidate => candidate.id === draft.rival);
   if (!rival || state.open < rival.unlock || Object.entries(draft.elements).some(([id,n]) => amount(id) < n)) return;
-  const battle = state.battle || {rival:rival.id, character:state.character, player:duelHealth, enemy:rival.health,
+  const battle = state.battle || {rival:rival.id, character:state.character, weapon:equippedWeapon(state.character), player:duelHealth, enemy:rival.health,
     enemyElements:{...rival.supplies}, researchAt:state.open, round:0, result:null, log:[]};
   for (const [id,n] of Object.entries(draft.elements)) add(id, -n);
   battle.elements = draft.elements;
@@ -259,7 +262,7 @@ function takeTurn() {
   battle.player -= plan.healthCost;
   const landed = plan.accuracy === 100 || Math.random() * 100 < plan.accuracy;
   if (plan.refund && landed) {
-    add(plan.refund,1);
+    add(plan.refund,plan.refundUnits);
     battle.recovered = true;
   }
   if (plan.steal) {
@@ -278,12 +281,13 @@ function takeTurn() {
   if (enemySpent) battle.enemyElements[enemySpent]--;
   battle.player = clamp(battle.player - received, duelHealth);
   duelCue = {move:value, damage, received};
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("aether:impact", {detail:{hit:Boolean(damage || received)}}));
   const used = Object.entries(plan.costs).map(([id,n]) => name(id) + " ×" + n).join("、");
   battle.log = ['第 ' + (battle.round + 1) + ' 回合 · ' + skill.label + '对' + stance.label + '，' +
     (landed ? '造成 ' + damage + ' 伤害' : '攻击落空') + '，受到 ' + received + ' 伤害。' +
     (used ? (plan.reserve ? ' 从研究库存消耗 ' : ' 消耗 ') + used + '。' : "") +
     (plan.healthCost ? ' 血刻消耗 ' + plan.healthCost + ' 护盾。' : "") +
-    (plan.refund && landed ? ' 回收 ' + name(plan.refund) + ' ×1。' : "") +
+    (plan.refund && landed ? ' 回收 ' + name(plan.refund) + ' ×' + plan.refundUnits + '。' : "") +
     (plan.steal ? ' 夺取 ' + name(plan.steal) + ' ×1，已存入研究库存。' : "") +
     (plan.heal ? ' 回护 +' + plan.heal + '。' : ""), ...battle.log].slice(0, 5);
 
@@ -301,7 +305,9 @@ function takeTurn() {
   if (!battle.player) {
     releaseElements(battle);
     battle.result = "护盾已破裂";
-    return update("演练结束，可以重新挑战。");
+    update("演练结束，可以重新挑战。");
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("aether:defeat"));
+    return;
   }
   battle.round++;
   update();

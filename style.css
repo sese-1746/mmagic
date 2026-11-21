@@ -227,6 +227,35 @@ footer span:first-child { color:var(--accent) }
 .travel-paths p { margin:0 0 7px }
 .travel-status { margin-top:10px }
 .travel-status span { color:var(--accent); font-size:13px }
+.weapon-current,.loadout-weapon { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px }
+.weapon-current span { color:var(--muted); font-size:13px }
+.loadout-weapon { margin-top:8px; color:var(--gold); font-size:13px }
+.loadout-weapon button { min-height:32px; padding:4px 10px }
+.role-copy .role-equipped { color:var(--gold); margin:0 0 9px }
+.weapon-group { margin:18px 0 0 }
+.weapon-group h2 { margin:0 0 8px; color:var(--gold); font-size:17px }
+.weapon-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,195px),1fr)); gap:10px }
+.weapon-card { --grade:#769b96; display:flex; flex-direction:column; overflow:hidden; border:1px solid #524556; border-radius:8px; background:#282333 }
+.weapon-card.stars-4 { --grade:#aa8ed3 }
+.weapon-card.stars-5 { --grade:#d6a260 }
+.weapon-card.equipped { border-color:var(--grade); box-shadow:0 0 0 1px var(--grade) }
+.weapon-art { display:grid; place-items:center; height:110px; border-bottom:1px solid var(--grade); background:radial-gradient(ellipse at center,color-mix(in srgb,var(--grade) 31%,#302434),#211c2a 80%) }
+.weapon-art img { display:block; width:100%; height:100%; max-height:105px; object-fit:contain; filter:drop-shadow(0 4px 6px #110914cc) }
+.weapon-card.locked .weapon-art img { filter:saturate(.6) brightness(.7) }
+.weapon-copy { display:flex; flex:1; flex-direction:column; align-items:start; gap:6px; padding:10px }
+.weapon-copy h3 { margin:0; color:var(--ink); font-size:16px }
+.weapon-copy p,.weapon-signature span { margin:0; color:var(--muted); font-size:12px; line-height:1.55 }
+.weapon-copy button { margin-top:auto }
+.weapon-signature { width:100%; padding:5px 0; border-top:1px solid #59495e }
+.weapon-signature strong { color:var(--gold); font-size:13px }
+.weapon-signature span { color:var(--accent) }
+.weapon-copy .weapon-requirement { color:var(--gold) }
+@media(max-width:480px) {
+  .weapon-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
+  .weapon-copy { padding:8px }
+  .weapon-art { height:85px }
+  .weapon-art img { max-height:80px }
+}
 @media(max-width:480px) {
   .loadout-grid,.skill-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }
   .skill-grid button { padding:6px }
