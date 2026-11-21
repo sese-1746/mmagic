@@ -103,22 +103,68 @@ footer span:first-child { color:var(--accent) }
 @media(prefers-reduced-motion:reduce) { *, *::before { transition:none !important } }
 
 .subheading { font-size:17px; margin:20px 0 10px }
-.conversation { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:14px }
-.conversation h2 { margin:3px 0 6px; font-size:19px }
-.conversation blockquote { margin:8px 0 13px; border-left:2px solid #91754e; padding-left:11px; color:var(--ink); line-height:1.65 }
-.portrait { width:48px; height:48px; border-radius:50%; display:grid; place-items:center; color:var(--gold); border:1px solid #8a7059; background:radial-gradient(circle,#544435,#2c2231); font-size:23px }
-.rival .portrait { margin:0 0 10px }
 .encounter-actions { display:flex; flex-wrap:wrap; gap:8px }
-.duel { border:1px solid var(--line); border-radius:10px; background:#282335; padding:clamp(10px,2.4vw,20px) }
-.duel-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
-.fighter { display:grid; gap:6px; background:#312a3d; border:1px solid #4b4054; border-radius:8px; padding:10px; min-width:0 }
-.fighter span,.intent span,.move small { color:var(--muted); font-size:12px }
+.encounter { overflow:hidden; border:1px solid #62503f; border-radius:10px; background:#25202d }
+.encounter-stage {
+  position:relative; isolation:isolate; overflow:hidden;
+  height:clamp(205px,39vw,375px);
+  background:linear-gradient(0deg,#171320 1%,transparent 52%,#1b1524a3),
+    url("assets/hall.webp") center 46%/cover, #393042;
+}
+.stage-art { position:absolute; inset:3% 1% 0; display:grid; grid-template-columns:1fr 1fr; align-items:end; justify-items:center }
+.scene-duel .stage-art { top:clamp(76px,21%,88px) }
+.character-art {
+  display:block; width:100%; height:100%; min-width:0; min-height:0;
+  object-fit:contain; object-position:bottom; user-select:none;
+  filter:drop-shadow(0 7px 10px #0b0816b0);
+}
+.stage-art .character-art { max-width:390px; mask-image:linear-gradient(#000 90%, transparent 100%) }
+.art-keeper,.art-kiln { scale:-1 1 }
+.character-art.listener { opacity:.62; filter:brightness(.76) drop-shadow(0 7px 10px #0b0816b0) }
+.character-art.speaking { filter:drop-shadow(0 1px 16px #cba27140) }
+.character-art.fallen { opacity:.45; filter:grayscale(.8) }
+.speech { position:relative; padding:13px clamp(12px,2vw,22px); background:linear-gradient(110deg,#352638,#251f2d); border-top:1px solid #9a785a }
+.speaker { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px }
+.speaker strong { color:#f2cea0; font-family:"Songti SC",SimSun,serif; font-size:18px }
+.speaker span { color:var(--muted); font-size:11px }
+.speech p { margin:7px 0 0; line-height:1.65 }
+.speech-detail,.move small,.fighter span { color:var(--muted); font-size:12px }
+.speech-detail { margin-top:7px; color:#d6c4e6 }
+.scene-actions { padding:10px clamp(10px,2vw,20px) }
+.rival-art {
+  overflow:hidden; height:140px; margin:-13px -13px 11px; border-radius:7px 7px 0 0;
+  background:radial-gradient(ellipse at bottom,#584354,#262131 70%); border-bottom:1px solid var(--line);
+}
+.rival.locked .rival-art { filter:grayscale(.8) brightness(.57) }
+.duel-stats {
+  position:absolute; z-index:1; inset:10px 10px auto; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;
+}
+.fighter { display:grid; gap:3px; background:#231d30e8; border:1px solid #635263; border-radius:7px; padding:6px 9px; min-width:0 }
+.fighter.opponent { text-align:right }
 .fighter progress { width:100%; height:10px; accent-color:var(--accent) }
 .fighter.opponent progress { accent-color:#d99292 }
-.duel-meta { display:flex; justify-content:space-between; gap:8px; color:var(--gold); font-size:12px; margin-top:13px }
-.intent { background:#211d2b; padding:10px; margin:8px 0 12px; border-radius:7px; display:flex; flex-wrap:wrap; align-items:center; gap:8px }
+.duel-meta { display:flex; justify-content:space-between; gap:8px; color:var(--gold); font-size:12px; padding:6px 12px; background:#1d1825 }
 .move { flex:1 1 105px; text-align:left }
 .move small { display:block; line-height:1.5; margin-top:3px }
-.duel-log { padding-left:20px; margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.7; list-style:none }
-.duel-log:empty { display:none }
-@media(max-width:430px) { .conversation .portrait { width:34px; height:34px; font-size:17px } .duel-log { padding-left:0 } }
+.last-action,.duel-history { margin:0 12px 9px; color:var(--muted); font-size:12px; line-height:1.65 }
+.duel-history summary { cursor:pointer }
+.duel-history ol { margin:5px 0; padding-left:16px }
+.impact { position:absolute; z-index:1; top:37%; color:#ffe2c0; text-shadow:0 2px 5px #351624; font-size:clamp(23px,5vw,47px); font-weight:800; pointer-events:none; animation:impact .95s ease-out both }
+.foe-impact { right:19% }
+.player-impact { left:19% }
+.cast-pulse,.cast-burst { animation:lunge .35s ease-out }
+.cast-brace,.cast-mend { animation:ward .55s ease-out }
+.recoil { animation:recoil .4s ease-out }
+.struck { animation:struck .4s ease-out }
+@keyframes lunge { 35% { transform:translateX(7%) } }
+@keyframes recoil { 40% { transform:translateX(6%); filter:brightness(1.45) } }
+@keyframes struck { 40% { transform:translateX(-5%); filter:brightness(1.4) } }
+@keyframes ward { 35% { filter:drop-shadow(0 0 17px #9affe3) } }
+@keyframes impact { from { opacity:1; transform:translateY(4px) } to { opacity:0; transform:translateY(-32px) } }
+@media(prefers-reduced-motion:reduce) { .character-art,.impact { animation:none !important } .impact { display:none } }
+@media(max-width:760px) { #screen:has(.scene-duel) + .inventory { display:none } }
+@media(max-width:480px) {
+  .scene-duel .encounter-stage { min-height:222px }
+  .fighter { font-size:12px }
+  .rival-art { height:120px }
+}
