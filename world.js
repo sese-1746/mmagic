@@ -80,6 +80,7 @@ function board(index) {
     return [q, r];
   };
   const route = walk.map(turn);
+  const solution = Object.fromEntries(route.map((cell, i) => [key(...cell), sequence[i]]));
   const anchors = {};
   const marks = sequence.length < 7 ? [0, sequence.length - 1] : [0, Math.floor((sequence.length - 1) / 2), sequence.length - 1];
   for (const i of marks) anchors[key(...route[i])] = sequence[i];
@@ -90,7 +91,7 @@ function board(index) {
       if (distance([q,r]) <= radius) cells.push({q, r, id: key(q,r)});
     }
   }
-  return {cells, anchors, blocked};
+  return {cells, anchors, blocked, solution};
 }
 
 function canConnect(a, b) {

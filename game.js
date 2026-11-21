@@ -1,13 +1,14 @@
 "use strict";
 
 const saveKey = "aether-fragment-v1";
-const tabs = [["research","研究台","⬡"], ["market","行旅驿站","◇"], ["arena","回响擂台","✧"], ["analysis","解析台","◈"], ["atlas","要素图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
+const tabs = [["research","研究台","⬡"], ["roster","角色选择","♙"], ["market","行旅驿站","◇"], ["arena","回响擂台","✧"], ["travel","旅行","△"], ["analysis","解析台","◈"], ["atlas","合成与图鉴","✦"], ["field","灵气场","◎"], ["infusion","注魔台","◇"], ["event","腐化事件","◌"]];
 const fresh = () => ({
   chapter: 0, open: 0, view: "research", inventory: {wind: 4, earth: 4, fire: 4, water: 4, order: 4, chaos: 4},
   known: [...primal], notes: {}, ink: 8, corruption: 0, residue: 0, region: 0,
   nodes: regions.map(region => region[2].map(() => ({life: 100, pure: false}))),
   relicUses: {}, failures: 0, lock: null, surge: 0, eventAt: 35,
-  coins: 3, wins: [], battle: null
+  coins: 3, wins: [], battle: null, preparation: null, character: "scholar", researchClues: {},
+  travelHistory: {}, expedition: null, tripReport: null, thefts: {}
 });
 
 let state = fresh();
@@ -16,6 +17,11 @@ try {
   const saved = JSON.parse(localStorage.getItem(saveKey));
   if (saved && Number.isInteger(saved.open) && saved.open >= 0 && saved.open <= chapters.length) {
     state = {...state, coins: state.coins + saved.open * 2, ...saved};
+    if (state.battle && !state.battle.enemyElements) {
+      const opponent = rivals.find(rival => rival.id === state.battle.rival);
+      state.battle.enemyElements = {...opponent?.supplies};
+      state.battle.researchAt = state.open;
+    }
   }
 } catch {}
 let selected = null;
@@ -59,7 +65,7 @@ function render() {
   const available = Object.keys(aspects).filter(id => state.known.includes(id) || amount(id));
   inventory.innerHTML = '<div class="eyebrow">工作台储备</div><h2>要素库存</h2><div class="tiles">' + available.map(id => btn(icon(id) + '<span>' + name(id) + '</span><b>' + amount(id) + '</b>', "select", id,
     'class="tile' + (state.corruption >= 50 && id === "chaos" ? ' distorted' : '') + '" draggable="' + (amount(id) > 0) + '" aria-pressed="' + (id === selected) + '" ' + (amount(id) ? '' : 'disabled'))).join("") + '</div><p class="muted">' + (selected ? '已选中 ' + name(selected) : '点击选取或拖到工作槽') + '</p>';
-  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, market, arena, event: eventScreen}[state.view] || research)();
+  get("screen").innerHTML = ({research, analysis, atlas, field, infusion, market, arena, roster, travel: travelScreen, event: eventScreen}[state.view] || research)();
   get("notice").textContent = notice;
   get("save").textContent = saveAvailable ? "本地自动存档" : "浏览器当前无法写入存档";
   get("nav").scrollLeft = navScroll;
@@ -75,11 +81,12 @@ function research() {
   const i = state.chapter;
   const solved = i < state.open;
   const [title, desc, , reward] = chapters[i];
-  const {cells, anchors, blocked} = board(i);
+  const {cells, anchors, blocked, solution} = board(i);
   const placed = state.notes[i] || {};
   const filled = {...placed, ...anchors};
   const edges = links(cells, filled);
   const ready = completed(anchors, edges);
+  const clue = solved ? undefined : state.researchClues[i];
   const center = (q, r) => [Math.sqrt(3) * 32 * (q + r / 2), 48 * r];
   const coords = Object.fromEntries(cells.map(({q, r, id}) => [id, center(q, r)]));
   const viewWidth = i < 3 ? 310 : i < 10 ? 330 : 430;
@@ -93,13 +100,14 @@ function research() {
     const aspect = filled[id];
     const fixed = Boolean(anchors[id]);
     const closed = blocked.includes(id) || (state.lock?.chapter === i && state.lock.id === id);
-    const label = fixed ? "固定 " + name(aspect) : closed ? "封闭槽位" : aspect ? name(aspect) + "，点击撤回" : "空槽位 " + id;
+    const label = (fixed ? "固定 " + name(aspect) : closed ? "封闭槽位" : aspect ? name(aspect) + "，点击撤回" : "空槽位 " + id) +
+      (id === clue ? "，读阵提示：" + name(solution[id]) : "");
     const interactive = !fixed && !closed && !solved;
-    return '<g transform="translate(' + x + ' ' + y + ')" class="hex' + (fixed ? ' fixed' : '') + (closed ? ' closed' : '') + '" ' +
+    return '<g transform="translate(' + x + ' ' + y + ')" class="hex' + (fixed ? ' fixed' : '') + (closed ? ' closed' : '') + (id === clue ? ' read-clue' : '') + '" ' +
       (interactive ? 'tabindex="0" role="button" data-action="cell" data-value="' + id + '" ' : 'role="img" ') +
       'aria-label="' + label + '"><polygon points="' + points + '"/>' +
       (aspect ? '<text class="glyph" y="4" style="fill:' + aspects[aspect][2] + '">' + aspects[aspect][1] + '</text><text class="cell-name" y="19">' + name(aspect) + '</text>' :
-        '<text class="empty" y="4">' + (closed ? '×' : '·') + '</text>') + '</g>';
+        '<text class="empty" y="4">' + (closed ? '×' : id === clue ? name(solution[id]) : '·') + '</text>') + '</g>';
   }).join("");
   const wires = edges.map(([a,b]) => {
     const [x1,y1] = coords[a], [x2,y2] = coords[b];
@@ -111,7 +119,8 @@ function research() {
       'aria-label="第 ' + (j+1) + ' 章 ' + chapters[j][0] + '" ' + (j === i ? 'aria-current="step"' : '') + (j > state.open ? ' disabled' : ''))).join("") + '</div>' +
     '<div class="board"><div class="board-meta"><span>研究阵图</span><span class="' + (ready ? 'success' : '') + '">' + (ready ? "锚点已连通" : "连接所有金边锚点") + '</span></div>' +
     '<svg aria-label="六边形研究阵图" viewBox="' + [-viewWidth/2,-viewHeight/2,viewWidth,viewHeight].join(" ") + '">' + shapes + '<g class="wires" aria-hidden="true">' + wires + '</g></svg>' +
-    '<div class="board-bottom"><span>' + (solved ? "笔记已保存" : "相邻的成分与复合要素才能连接") + '</span>' + controls + '</div></div>' +
+    '<div class="board-bottom"><span>' + (solved ? "笔记已保存" : clue ? "读阵提示 · 在青框槽位放入「" + name(solution[clue]) + "」" : "相邻的成分与复合要素才能连接") + '</span>' +
+    (state.character === "scholar" && !solved ? btn(clue ? "已读阵" : "读阵", "read-board", "", clue || ready ? "disabled" : "") : "") + controls + '</div></div>' +
     '<p class="hint">' + (state.open === chapters.length ? "全部研究已完成。你留下的笔记将指引下一位残响解析者。" :
       i === 0 ? "试试把「雾」放在风与水之间。可在解析台取得雾，也可在图鉴用风和水合成。"
       : '从库存选取或拖放要素。再次点击或右键撤回，已使用的要素与墨水不会返还。' + (reward && !solved ? ' 本页开放「' + name(reward) + '」试配。' : '')) + '</p>';
@@ -133,9 +142,13 @@ function analysis() {
 }
 
 function atlas() {
-  return heading("成分与配方", "要素图鉴", "从库存选取成分，点击或拖到合成位。合成每次消耗两份成分，产出一份复合要素。") +
-    '<div class="workbar">' + [0,1].map(i => btn(mix[i] ? icon(mix[i]) + name(mix[i]) : '合成位 ' + (i+1), "mix", i)).join("") +
-    btn("合成要素", "craft", "", 'class="primary" ' + (mix.filter(Boolean).length < 2 ? "disabled" : "")) + '</div><div class="cards">' +
+  const recipe = matchingRecipe();
+  const preview = activeCharacter().kind === "research" && recipe ? '<p class="alchemy-chance">鉴析 · ' + name(recipe) + '合成成功率 ' + craftChance(recipe) + '%</p>' : "";
+  return heading("成分与配方", "合成与图鉴", "从库存选取成分，点击或拖到合成位。合成每次消耗两份成分，产出一份复合要素。") +
+    '<div class="alchemy-scene"><div class="alchemy-slots">' +
+    btn(mix[0] ? icon(mix[0]) + name(mix[0]) : "合成位 1", "mix", 0, 'class="ingredient"') +
+    '<span aria-hidden="true">＋</span>' + btn(mix[1] ? icon(mix[1]) + name(mix[1]) : "合成位 2", "mix", 1, 'class="ingredient"') + '</div>' +
+    preview + btn("合成要素", "craft", "", 'class="primary" ' + (mix.filter(Boolean).length < 2 ? "disabled" : "")) + '</div><div class="cards">' +
     Object.entries(aspects).map(([id, [, , , parts]]) => {
       const visible = state.known.includes(id) || discoverable().has(id);
       return '<article class="card lexicon">' + (visible ? '<h3>' + icon(id) + name(id) + '</h3><p>' +
@@ -216,6 +229,18 @@ function put(id, aspect, remove = false) {
   update("已刻写 " + name(aspect) + "。");
 }
 
+function readBoard() {
+  const i = state.chapter;
+  if (state.character !== "scholar" || i < state.open || state.researchClues[i]) return;
+  const {solution, anchors, cells} = board(i);
+  const filled = {...state.notes[i], ...anchors};
+  if (completed(anchors, links(cells, filled))) return;
+  const clue = Object.keys(solution).find(id => !anchors[id] && filled[id] !== solution[id]);
+  if (!clue) return;
+  state.researchClues[i] = clue;
+  update("闻汐标出了「" + name(solution[clue]) + "」的位置。");
+}
+
 function submit() {
   const i = state.chapter;
   if (i !== state.open) return;
@@ -232,12 +257,18 @@ function submit() {
     know(reward);
     add(reward, 2);
   }
+  const bonus = activeCharacter().kind === "research" && (reward || chapters[i][2][1]);
+  if (bonus) {
+    know(bonus);
+    add(bonus,1);
+  }
   state.open++;
   state.ink += 5;
   state.coins += 2;
   state.failures = 0;
   state.lock = null;
-  update("研究已归档，获得 5 墨水、2 潮印" + (reward ? "和 2 " + name(reward) : "") + "。");
+  update("研究已归档，获得 5 墨水、2 潮印" + (reward ? "和 2 " + name(reward) : "") +
+    (bonus ? "。读阵记录额外产出 " + name(bonus) + " ×1" : "") + "。");
 }
 
 function rest() {
@@ -276,17 +307,33 @@ function fillSlot(slots, index, id) {
   update(id && !amount(id) ? "所选要素库存不足。" : undefined);
 }
 
-function craft() {
+function matchingRecipe() {
   const result = Object.keys(aspects).find(id => {
     const parts = aspects[id][3];
     return mix[0] && mix[1] && parts && parts.includes(mix[0]) && mix[1] === parts.find(part => part !== mix[0]);
   });
-  if (!result || !(state.known.includes(result) || discoverable().has(result))) return update("两份成分未匹配已开放的配方。");
+  return result && (state.known.includes(result) || discoverable().has(result)) ? result : null;
+}
+
+function craftChance(id) {
+  const complexParts = aspects[id][3].filter(part => aspects[part][3]).length;
+  return Math.max(65,100 - complexParts * 7 - Math.floor(state.corruption / 10) * 2);
+}
+
+function craft() {
+  const result = matchingRecipe();
+  if (!result) return update("两份成分未匹配已开放的配方。");
   if (!enough(mix)) return update("成分库存不足。");
+  const chance = craftChance(result);
   for (const id of mix) add(id, -1);
+  mix = [];
+  if (chance < 100 && Math.random() * 100 >= chance) {
+    state.residue++;
+    corrupt(4);
+    return update("合成失稳，留下 1 份残渣，腐化增加 4。");
+  }
   know(result);
   add(result, 1);
-  mix = [];
   update("合成了 " + name(result) + "。");
 }
 
@@ -308,6 +355,15 @@ function infuse() {
 function act(action, value, aspect = selected) {
   switch (action) {
     case "view": state.view = value; return update();
+    case "choose-role":
+      if (state.view !== "roster" || !Object.hasOwn(characters, value) || (state.battle && !state.battle.result)) return;
+      state.character = value;
+      conversation.receipt = null;
+      return update("现在由" + activeCharacter().name + "出场。");
+    case "read-board": return readBoard();
+    case "travel-start": return startTravel(value);
+    case "travel-choose": return finishTravel(value);
+    case "travel-cancel": state.expedition = null; return update("已折返驿站。");
     case "select": selected = selected === value ? null : value; return update();
     case "chapter": state.chapter = Number(value); return update();
     case "cell": return put(value, aspect);

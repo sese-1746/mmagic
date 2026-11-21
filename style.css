@@ -61,6 +61,8 @@ main { padding:clamp(15px,3vw,30px); min-width:0 }
 .hex.fixed polygon { fill:#3a2e38; stroke:#98703d; stroke-width:2.5 }
 .hex.closed polygon { fill:#785d6b; stroke-dasharray:4 3 }
 .hex:has(.glyph):not(.fixed) polygon { fill:#413347 }
+.hex.read-clue polygon { stroke:#277c70; stroke-width:3 }
+.hex.read-clue .empty { fill:#15483e; font-weight:700; font-size:12px }
 .hex text { text-anchor:middle; user-select:none; pointer-events:none }
 .glyph { font-size:23px }
 .cell-name { font-size:10px; fill:#fff1d0 }
@@ -152,7 +154,7 @@ footer span:first-child { color:var(--accent) }
 .impact { position:absolute; z-index:1; top:37%; color:#ffe2c0; text-shadow:0 2px 5px #351624; font-size:clamp(23px,5vw,47px); font-weight:800; pointer-events:none; animation:impact .95s ease-out both }
 .foe-impact { right:19% }
 .player-impact { left:19% }
-.cast-pulse,.cast-burst { animation:lunge .35s ease-out }
+.cast-echo,.cast-pulse,.cast-burst,.cast-weave { animation:lunge .35s ease-out }
 .cast-brace,.cast-mend { animation:ward .55s ease-out }
 .recoil { animation:recoil .4s ease-out }
 .struck { animation:struck .4s ease-out }
@@ -167,4 +169,65 @@ footer span:first-child { color:var(--accent) }
   .scene-duel .encounter-stage { min-height:222px }
   .fighter { font-size:12px }
   .rival-art { height:120px }
+}
+
+.role-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr)); gap:12px }
+.role-card { display:flex; flex-direction:column; overflow:hidden; border:1px solid #524556; border-radius:10px; background:#282333 }
+.role-card.equipped { border-color:#c3a775; box-shadow:0 0 0 1px #c3a77552 }
+.role-art { position:relative; height:195px; background:radial-gradient(ellipse at 50% 90%,#675146,#34293d 65%,#24202d); border-bottom:1px solid #62503f }
+.role-art .character-art { padding:8px 5px 0 }
+.role-category { position:absolute; top:10px; left:10px; z-index:1; padding:4px 8px; border:1px solid #8f7460; background:#241d2a; color:#ecd0a5; border-radius:4px; font-size:12px }
+.role-copy { display:flex; flex:1; flex-direction:column; align-items:start; padding:12px }
+.role-copy h2 { margin:0; color:#efdab7; font:600 23px "Songti SC",SimSun,serif }
+.role-copy p { margin:5px 0; font-size:13px; color:var(--muted); line-height:1.55 }
+.role-skill { width:100%; margin:8px 0 12px; padding:9px 0 0; border-top:1px solid #534258; flex:1 }
+.role-skill strong { color:var(--accent) }
+.alchemy-scene {
+  display:grid; justify-items:center; align-content:end; gap:11px; min-height:clamp(190px,28vw,290px); padding:18px;
+  border:1px solid #866b4f; border-radius:9px; margin-bottom:15px;
+  background:linear-gradient(0deg,#1b1522e8,transparent 83%),url("assets/alchemy.webp") center 56%/cover,#352a32;
+}
+.alchemy-slots { display:flex; align-items:center; justify-content:center; gap:8px; color:#f0d29e }
+.ingredient { min-width:96px; min-height:61px; color:#f4e7ce; border-color:#967449; background:#261c2add }
+.ingredient .rune { display:block; margin:0 0 4px; font-size:20px }
+@media(max-width:480px) {
+  .role-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
+  .role-art { height:145px }
+  .role-copy { padding:8px }
+}
+
+.loadout h2 { margin:0 }
+.loadout-total { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:12px 0; color:var(--accent) }
+.loadout-total progress { accent-color:var(--accent); max-width:100% }
+.loadout-grid,.skill-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); gap:8px }
+.loadout-grid { margin-bottom:13px }
+.loadout-item { display:flex; flex-direction:column; align-items:start; gap:5px; padding:7px; border:1px solid var(--line); border-radius:6px }
+.loadout-item small { color:var(--muted); font-size:11px }
+.loadout-item > div { width:100%; display:flex; align-items:center; justify-content:space-between; gap:7px }
+.loadout-item button { min-width:40px; min-height:34px; padding:4px 9px }
+.skill-panel { padding:12px }
+.duel-pool { padding:0 0 9px; color:var(--gold) }
+.pool-tokens,.skill-picker { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:6px }
+.pool-tokens > span { border:1px solid var(--line); border-radius:5px; padding:4px 6px; color:var(--ink); font-size:12px }
+.skill-config { margin-top:10px; border-top:1px solid var(--line); padding-top:10px }
+.skill-picker { margin:0 0 7px }
+.skill-picker > span { min-width:72px; color:var(--muted); font-size:12px }
+.skill-picker button { font-size:12px; min-height:34px; padding:4px 8px }
+.skill-panel .muted { margin:4px 0 7px }
+.duel-intel { padding:8px 12px; border-bottom:1px solid var(--line); color:var(--gold); font-size:13px }
+.skill-config [data-action="skill-overcast"] { margin-bottom:8px }
+.alchemy-chance { margin:0; color:#c2f3e8; background:#191926e8; border:1px solid #497066; padding:5px 9px; border-radius:5px; font-size:13px }
+.role-skill p + strong { display:block; margin-top:10px }
+.travel-view {
+  display:flex; justify-content:flex-end; height:clamp(170px,37vw,285px);
+  background:linear-gradient(0deg,#211928a0,transparent 55%),url("assets/travel.webp") center 56%/cover,#40324a;
+}
+.travel-view .character-art { width:min(51%,285px); padding:5px 8px 0 0; mask-image:linear-gradient(#000 90%,transparent 100%) }
+.travel-paths { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,194px),1fr)); gap:8px; padding:10px 10px 0 }
+.travel-paths p { margin:0 0 7px }
+.travel-status { margin-top:10px }
+.travel-status span { color:var(--accent); font-size:13px }
+@media(max-width:480px) {
+  .loadout-grid,.skill-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .skill-grid button { padding:6px }
 }
